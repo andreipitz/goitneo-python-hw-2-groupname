@@ -1,52 +1,111 @@
+def parse_input(user_input):
+    cmd, *args = user_input.split()
+    cmd = cmd.strip().lower()
+    return cmd, *args
+def input_error(func):
+    def inner(args, kwargs):
+        try:
+            return func(args, kwargs)
+        except ValueError:
+            return "Give me name and phone please."
+        except KeyError:
+            return "Contact not found."
+        except IndexError:
+            return "Invalid command."
+
+    return inner
+@input_error
+def add_contact(args, contacts):
+    name, phone = args
+    contacts[name] = phone
+    return "Contact added."
+@input_error
+def change_contact(args, contacts):
+    name, phone = args
+    if name in contacts:
+        contacts[name] = phone
+        return "Contact updated."
+    else:
+        return "Contact not found."
 def main():
     contacts = {}
-    print("Welcome to the console bot assistant!")
+    print("Welcome to the assistant bot!")
     while True:
-        command = input("\nEnter a command: ").strip().lower()
-        if command in {"close", "exit"}:
-            print("Goodbye!")
-            exit(0)
-        elif command == "help":
-            print("Available commands:")
-            print("  - 'hello': Start a conversation with the bot")
-            print("  - 'add [name] [phone number]': Add a new contact")
-            print("  - 'change [name] [new phone number]': Update a contact's phone number")
-            print("  - 'phone [name]': Get a contact's phone number")
-            print("  - 'all': Show all contacts")
-            print("  - 'close' or 'exit': Quit the bot")
+        user_input = input("Enter a command: ")
+        command, *args = parse_input(user_input)
+
+        if command in ["close", "exit"]:
+            print("Good bye!")
+            break
         elif command == "hello":
             print("How can I help you?")
-        elif command.startswith("add "):
-            try:
-                name, phone_number = command.split(" ", 2)
-                contacts[name] = phone_number
-                print("Contact added.")
-            except ValueError:
-                print("Invalid syntax. Please try again.")
-        elif command.startswith("change "):
-            try:
-                name, phone_number = command.split(" ", 2)
-                if name in contacts:
-                    contacts[name] = phone_number
-                    print("Contact updated.")
-                else:
-                    print("Name not found.")
-            except ValueError:
-                print("Invalid syntax. Please try again.")
-        elif command.startswith("phone "):
-            try:
-                name = command.split(" ", 1)[1]
-                if name in contacts:
-                    print(contacts[name])
-                else:
-                    print("Name not found.")
-            except ValueError:
-                print("Invalid syntax. Please try again.")
-        elif command == "all":
-            for name, phone_number in contacts.items():
-                print(f"{name}: {phone_number}")
+        elif command == "add":
+            print(add_contact(args, contacts))
         else:
-            print("Invalid command. Please try again.")
+            print("Invalid command.")
+class Field:
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def get_value(self):
+        return self.value
+
+    def set_value(self, value):
+        self.value = value
+
+class Record:
+    def __init__(self):
+        self.fields = []
+
+    def add_field(self, name, value):
+        field = Field(name, value)
+        self.fields.append(field)
+
+    def remove_field(self, name):
+        for field in self.fields:
+            if field.name == name:
+                self.fields.remove(field)
+                break
+
+    def edit_field(self, name, value):
+        for field in self.fields:
+            if field.name == name:
+                field.set_value(value)
+                break
+
+class ContactBook:
+    def __init__(self):
+        self.records = []
+
+    def add_record(self, record):
+        self.records.append(record)
+
+    def remove_record(self, name):
+        for record in self.records:
+            if record.name == name:
+                self.records.remove(record)
+                break
+
+    def search(self, criteria):
+        results = []
+        for record in self.records:
+            match = True
+            for criterion in criteria:
+                found = False
+                for field in record.fields:
+                    if field.name == criterion:
+                        found = True
+                        if field.value != criteria[criterion]:
+                            match = False
+                            break
+                if not found:
+                    match = False
+                    break
+            if match:
+                results.append(record)
+        return results
 
 if __name__ == "__main__":
     main()
+
